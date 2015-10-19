@@ -2,6 +2,9 @@
 import sys
 import my_ngram
 
+
+#Mecabでスペース区切りの分かち書きされた文を標準入力から読み込み、
+#対数確率を出力する
 def main():
     sys.stderr.write("Loading n-gram...")
     sys.stderr.flush()
