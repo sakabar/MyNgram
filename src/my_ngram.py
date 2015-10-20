@@ -17,7 +17,7 @@ def get_unigram_dict():
         line = line.rstrip()
         lst = line.split('\t')
         ans_dict[lst[0]]=int(lst[1])
-    return ans_dict
+    return (ans_dict, 1)
 
 #FIXME
 #ディレクトリはベタ打ち。
@@ -38,7 +38,7 @@ def get_bigram_dict():
             cnt = int(lst[1])
             ans_dict[ngram]=cnt
 
-    return ans_dict
+    return (ans_dict, 2)
 
 #FIXME
 #ディレクトリはベタ打ち。
@@ -59,7 +59,7 @@ def get_trigram_dict():
             cnt = int(lst[1])
             ans_dict[ngram]=cnt
 
-    return ans_dict
+    return (ans_dict, 3)
 
 #FIXME
 #ディレクトリはベタ打ち。
@@ -79,7 +79,7 @@ def get_fourgram_dict():
             cnt = int(lst[1])
             ans_dict[ngram]=cnt
 
-    return ans_dict
+    return (ans_dict, 4)
 
 
 #文字列のリストを受けとり、ngramにしたリストを返す
@@ -100,18 +100,17 @@ def calc_ngram_log_probability(ngram, ngram_dict, n_1_gram_dict, vocab_num, deli
     # if len(ngram.split(delim)) != len(ngram_dict.keys()[0].split(delim)):
     #     raise Exception('Argument Error')
 
-    # #依存型でNgramの型を表したい。無理だけど。
-    # if len(ngram_dict.keys()[0].split(delim)) - len(n_1_gram_dict.keys()[0].split(delim)) != 1:
-    #     raise Exception('Argument Error')
-
     n_1_gram = delim.join(ngram.split(delim)[0:-1])
-    return math.log10(ngram_dict.get(ngram, 0) + 1.0) - math.log10(n_1_gram_dict.get(n_1_gram, 0) + vocab_num)
+    return math.log10(ngram_dict[0].get(ngram, 0) + 1.0) - math.log10(n_1_gram_dict[0].get(n_1_gram, 0) + vocab_num)
      
 #返す値は対数確率
 def calc_sentence_log_probability(sentence_ngram, ngram_dict, n_1_gram_dict, vocab_num, delim=' '):
     ans = 0.0
-    # if len(sentence_ngram[0].split(delim)) != len(ngram_dict.keys()[0].split(delim)):
-    #     raise Exception('Argument Error')
+    if len(sentence_ngram[0].split(delim)) != ngram_dict[1]:
+        raise Exception('Argument Error')
+
+    if ngram_dict[1] - n_1_gram_dict[1] != 1:
+        raise Exception('Argument Error')
 
     for ngram in sentence_ngram:
         ans += calc_ngram_log_probability(ngram, ngram_dict, n_1_gram_dict, vocab_num, delim)
@@ -124,12 +123,16 @@ def get_stub_unigram_dict():
     unigram_dict["<S>"] = 1
     unigram_dict["</S>"] = 1
 
-    return unigram_dict
+    return (unigram_dict, 1)
 
 def get_stub_bigram_dict(): 
     bigram_dict = {}
     bigram_dict["<S> 走る"] = 1
     bigram_dict["走る </S>"] = 1
 
-    return bigram_dict
+    return (bigram_dict, 2)
 
+def get_stub_trigram_dict():
+    trigram_dict = {}
+    trigram_dict["<S> 走る </S>"] = 1
+    return (trigram_dict, 3)
