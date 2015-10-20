@@ -3,7 +3,7 @@ import sys
 import my_ngram
 
 def main():
-    n = 3
+    n = 4
     ngram_manager = my_ngram.NgramManager(n)
 
     for line in sys.stdin:
@@ -24,5 +24,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-

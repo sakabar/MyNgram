@@ -17,7 +17,8 @@ def get_unigram_dict():
         line = line.rstrip()
         lst = line.split('\t')
         ans_dict[lst[0]]=int(lst[1])
-    return (ans_dict, 1)
+    # return (ans_dict, 1)
+    return ans_dict
 
 #FIXME
 #ディレクトリはベタ打ち。
@@ -97,26 +98,6 @@ def get_ngram(words, n, start="<S>", end="</S>", delim=' '):
     lst.append(end)
 
     return ([delim.join(lst[i:i+n]) for i in xrange(0, len(lst) + 1 - n)], n)
-
-def get_stub_unigram_dict():
-    unigram_dict = {}
-    unigram_dict["走る"] = 1
-    unigram_dict["<S>"] = 1
-    unigram_dict["</S>"] = 1
-
-    return (unigram_dict, 1)
-
-def get_stub_bigram_dict(): 
-    bigram_dict = {}
-    bigram_dict["<S> 走る"] = 1
-    bigram_dict["走る </S>"] = 1
-
-    return (bigram_dict, 2)
-
-def get_stub_trigram_dict():
-    trigram_dict = {}
-    trigram_dict["<S> 走る </S>"] = 1
-    return (trigram_dict, 3)
 
 def load_ngram_dicts(n):
     sys.stderr.write("Loading unigram...")
@@ -210,6 +191,9 @@ class NgramManager:
         elif self.n == 3:
             ind_lst = ["!! ありがとう ござい", "2 ) はっぴ", "<S> そのまま 轢か", "<S> 日本 赤ちゃん", "TOP | 気", "、 そんな 憂鬱", "「 アール・デコ 様式", "いっ た 戦績", "が おこがましい です", "さ れ 歩道橋", "それなり に 着込ん", "つか 、 劇", "と かなり 早め", "ながら クリア で", "による 歌 .", "の 違法 整備", "ぴこぞう コーナー >", "もしかして 「 私", "を 教える 係り", "キチ の 誕生", "ストレート 用 コーム", "ハービス ENT で", "マジ あり ませ", "・ ・ 定峰", "交わる べき なり", "個別 的 です", "割合 ( 好み", "呼びかけ て 頂く", "天皇 が 参列", "左腕 が 復活", "情報 ( 料金", "新潟 の フィッシング", "村 に 生きる", "法 ; 港", "生前 に 読ん", "程 良く 煮え", "脇 元 嘉", "設け たり と", "過程 で 社内", "頸城 郡 松代"]
             ngram_ind = self.search_ngram_ind(ngram, ind_lst)
+        elif self.n == 4:
+            ind_lst = ["!! こちら は この", "- とにかく 綺麗 です", "4 形式 の 圧縮", "<S> ■ 注目 システム", "<S> ちょっと 天 板", "<S> ナポリ 経由 で", "<S> 問題 教師 は", "<S> 理系 大学生 学園", "CD じゃ ない じゃん", "↓ 以下 、 コメントレス", "、 なんとなく 何 回", "、 又は あ つて", "、 肝 は 「", "」 し て ←", "あん たら 何 しとる", "おおむね 同じ 期間 で", "が 20 年 先", "が 萱野 稔 人", "この 馬 が 勝っ", "し 以下 の 事", "その 味 は 多く", "た 猫 長靴 を", "ちょうど 良い 焼き 具合", "て 吸っ て 下さい", "で 嬉しい な (*^^*)", "と ヒャクニチソウ の 花", "どうこう 口出し する こと", "なく て 「 エイ", "に は 離れ ませ", "におい 、 廃 熱", "の オキニイリ は 、", "の 名前 や レース", "の 申請 日 と", "は 1 歩 譲る", "は 塩素 で バツ", "へ 本気 で 行き", "も あまり 考え すぎ", "や 砂 と の", "を おこす と 言う", "ん だ 大丈夫 じゃ", "ガム を 減らし て", "シーズン / お ぎやはぎ", "データベース が あり 、", "フランス と の 類似", "モットー に がんばっ ちゃ", "・ 三河 産地 フォーラム", "世界 で 23 億", "人間らしい 猫 です 。", "何となく 理解 出来 まし", "全国 各地 で 急増", "剣道 時代 5 月", "只 、 人 の", "国民 を 応援 する", "大臣 が 「 農業", "寝泊まり し た 時", "幼稚園 の お子さん だ", "性 ・ ソフト タイプ", "授業 で 会っ て", "日 ギフト で も", "月 ~ 金 ):", "様 な 演技 に", "活動 し て られ", "狩り は 嫌い な", "皆 に 無視 さ", "積み木 を 利用 し", "編成 の 極めて 珍しい", "英 史 、 寿司", "計画 図 Iga を", "身近 に 大阪 を", "酢 砂糖 ゴマ油 </S>", "音 を 放つ 事"]
+            ngram_ind = self.search_ngram_ind(ngram, ind_lst)
         else:
             raise Exception('No implimentation')
 
@@ -218,10 +202,13 @@ class NgramManager:
             pass
         else:
             if self.n == 2:
-                self.ngram_dict = self.load_ngram_lazily(self.ngram_dict, ngram_ind, 2)
+                self.ngram_dict = self.load_ngram_lazily(self.ngram_dict, ngram_ind, self.n)
                 self.ngram_loaded_flags[ngram_ind] = 1
             elif self.n == 3:
-                self.ngram_dict = self.load_ngram_lazily(self.ngram_dict, ngram_ind, 3)
+                self.ngram_dict = self.load_ngram_lazily(self.ngram_dict, ngram_ind, self.n)
+                self.ngram_loaded_flags[ngram_ind] = 1
+            elif self.n == 4:
+                self.ngram_dict = self.load_ngram_lazily(self.ngram_dict, ngram_ind, self.n)
                 self.ngram_loaded_flags[ngram_ind] = 1
             else:
                 raise Exception('No implimentation')
@@ -233,6 +220,9 @@ class NgramManager:
         elif self.n == 3:
             ind_lst = ["! </S>", "☆ 青のり", "たくさん 臨時", "も 追い返せ", "デバイス CD", "伯 朗", "引き続き 指摘", "発 叩き込も", "高かろ ー"]
             n_1_gram_ind = self.search_ngram_ind(n_1_gram_key, ind_lst)
+        elif self.n == 4:
+            ind_lst = ["!! ありがとう ござい", "2 ) はっぴ", "<S> そのまま 轢か", "<S> 日本 赤ちゃん", "TOP | 気", "、 そんな 憂鬱", "「 アール・デコ 様式", "いっ た 戦績", "が おこがましい です", "さ れ 歩道橋", "それなり に 着込ん", "つか 、 劇", "と かなり 早め", "ながら クリア で", "による 歌 .", "の 違法 整備", "ぴこぞう コーナー >", "もしかして 「 私", "を 教える 係り", "キチ の 誕生", "ストレート 用 コーム", "ハービス ENT で", "マジ あり ませ", "・ ・ 定峰", "交わる べき なり", "個別 的 です", "割合 ( 好み", "呼びかけ て 頂く", "天皇 が 参列", "左腕 が 復活", "情報 ( 料金", "新潟 の フィッシング", "村 に 生きる", "法 ; 港", "生前 に 読ん", "程 良く 煮え", "脇 元 嘉", "設け たり と", "過程 で 社内", "頸城 郡 松代"]
+            n_1_gram_ind = self.search_ngram_ind(n_1_gram_key, ind_lst)
         else:
             raise Exception('No implimentation')
 
@@ -243,7 +233,10 @@ class NgramManager:
             if self.n == 2:
                 pass #unigramは読み込み済み
             elif self.n == 3:
-                self.n_1_gram_dict = self.load_ngram_lazily(self.n_1_gram_dict, n_1_gram_ind, 2)
+                self.n_1_gram_dict = self.load_ngram_lazily(self.n_1_gram_dict, n_1_gram_ind, self.n-1)
+                self.n_1_gram_loaded_flags[n_1_gram_ind] = 1
+            elif self.n == 4:
+                self.n_1_gram_dict = self.load_ngram_lazily(self.n_1_gram_dict, n_1_gram_ind, self.n-1)
                 self.n_1_gram_loaded_flags[n_1_gram_ind] = 1
             else:
                 raise Exception('No implimentation')
@@ -257,11 +250,15 @@ class NgramManager:
 
         if n == 2:
             file_name = '/raid_back/lrscp/data/ngram/original/vol1/data/2gms/2gm-000%d.gz' % ind
-            sys.stderr.write("Loading bigram #%02d..." % ind)
+            sys.stderr.write("**Loading 2gram #%02d..." % ind)
             sys.stderr.flush()
         elif n == 3:
             file_name = '/raid_back/lrscp/data/ngram/original/vol1/data/3gms/3gm-00%02d.gz' % ind
-            sys.stderr.write("Loading trigram #%02d..." % ind)
+            sys.stderr.write("***Loading 3gram #%02d..." % ind)
+            sys.stderr.flush()
+        elif n == 4:
+            file_name = '/raid_back/lrscp/data/ngram/original/vol1/data/4gms/4gm-00%02d.gz' % ind if ind <= 24  else '/raid_back/lrscp/data/ngram/original/vol2/data/4gms/4gm-00%02d.gz' % ind
+            sys.stderr.write("****Loading 4gram #%02d..." % ind)
             sys.stderr.flush()
         else:
             Exception('Not implimented')
