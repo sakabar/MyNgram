@@ -40,6 +40,27 @@ def get_bigram_dict():
 
     return ans_dict
 
+#FIXME
+#ディレクトリはベタ打ち。
+#trigramの情報を特定のファイルから読み込んで、その結果を辞書にして返す
+#読み込むファイル群は固定なので、デリミタなどは指定できない。(ここでは、Google N-gramに準拠)
+#辞書のキーはtrigram (単語同士の区切り文字はスペース)
+#辞書の値はtrigramの出現回数
+def get_trigram_dict():
+    # ans_dict = defaultdict(lambda: 0) #存在しないキーにアクセスした場合は0を返すようにする ← これだと、だんだんキーの数が変わるので、語彙の数がおかしくなる
+    ans_dict = {}
+
+    for i in xrange(0,39+1): #ここ、マジックナンバー FIXME
+        file_name = '/raid_back/lrscp/data/ngram/original/vol1/data/3gms/3gm-00%02d.gz' % i
+        for line in gzip.open(file_name, 'r'):
+            line = line.rstrip()
+            lst = line.split('\t')
+            ngram = lst[0]
+            cnt = int(lst[1])
+            ans_dict[ngram]=cnt
+
+    return ans_dict
+
 
 #文字列のリストを受けとり、ngramにしたリストを返す
 #words: 文字列のリスト
