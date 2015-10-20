@@ -98,25 +98,6 @@ def get_ngram(words, n, start="<S>", end="</S>", delim=' '):
 
     return ([delim.join(lst[i:i+n]) for i in xrange(0, len(lst) + 1 - n)], n)
 
-#返す値は対数確率
-def calc_ngram_log_probability(ngram, ngram_dict, n_1_gram_dict, vocab_num, delim=' '):
-    n_1_gram = delim.join(ngram.split(delim)[0:-1])
-    return math.log10(ngram_dict[0].get(ngram, 0) + 1.0) - math.log10(n_1_gram_dict[0].get(n_1_gram, 0) + vocab_num)
-     
-#返す値は対数確率
-def calc_sentence_log_probability(sentence_ngram, ngram_dict, n_1_gram_dict, vocab_num, delim=' '):
-    ans = 0.0
-    if sentence_ngram[1] != ngram_dict[1]:
-        raise Exception('Argument Error')
-
-    if ngram_dict[1] - n_1_gram_dict[1] != 1:
-        raise Exception('Argument Error')
-
-    for ngram in sentence_ngram[0]:
-        ans += calc_ngram_log_probability(ngram, ngram_dict, n_1_gram_dict, vocab_num, delim)
-
-    return ans
-
 def get_stub_unigram_dict():
     unigram_dict = {}
     unigram_dict["走る"] = 1
@@ -179,3 +160,102 @@ def load_ngram_dicts(n):
         sys.stderr.write("done.\n")
         sys.stderr.flush()
         return (unigram_dict, n_1_gram_dict, ngram_dict)
+
+class NgramManager:
+    def __init__(self, n):
+        self.n = n
+        sys.stderr.write("Loading unigram...")
+        sys.stderr.flush()
+        self.unigram_dict = get_unigram_dict()
+        self.vocab_num = 2565424 #FIXME Google N-gram ベタ打ち
+        sys.stderr.write("done.\n")
+        sys.stderr.flush()
+
+        self.ngram_dict = {}
+        self.ngram_loaded_flags = {}
+        if n == 2:
+            self.n_1_gram_dict = self.unigram_dict
+            self.n_1_gram_loaded_flags = {}
+            self.n_1_gram_loaded_flags[0] = 1
+        else:
+            self.n_1_gram_dict = {}
+            self.n_1_gram_loaded_flags = {}
+
+    def search_2gram_ind(self, key):
+        ind_lst = ["! </S>", "☆ 青のり", "たくさん 臨時", "も 追い返せ", "デバイス CD", "伯 朗", "引き続き 指摘", "発 叩き込も", "高かろ ー"]
+
+        #ind_lst[0] <= key < ind_lst[1] → ans_ind = 0
+        for i in xrange(1, 8+1): #FIXME マジックナンバー
+            if key < ind_lst[i]:
+                return i - 1
+
+        return 8 #FIXME マジックナンバー
+
+
+    #ngram_dictとn_1_gram_dictを利用して対数確率を計算
+    def calc_sentence_log_probability(self, sentence_ngram, delim=' '):
+        ans = 0.0
+        for ngram in sentence_ngram[0]:
+            ans += self.calc_ngram_log_probability(ngram, delim)
+
+        return ans
+
+
+    #返す値は対数確率
+    def calc_ngram_log_probability(self, ngram, delim=' '):
+        n_1_gram_key = delim.join(ngram.split(delim)[0:-1])
+
+        ngram_ind = 0
+        if self.n == 2:
+            ngram_ind = self.search_2gram_ind(ngram)
+        else:
+            raise Exception('No implimentation')
+
+        #既に読み込んだngramか?
+        if ngram_ind in self.ngram_loaded_flags:
+            pass
+        else:
+            self.ngram_dict = self.load_2gram_lazily(self.ngram_dict, ngram_ind)
+            self.ngram_loaded_flags[ngram_ind] = 1
+
+        # n_1_gram_ind = 0
+        # #既に読み込んだ(n-1)gramか?
+        # if ngram_ind in self.n_1_gram_loaded_flags:
+        #     pass
+        # else:
+        #     self.n_1_gram_dict = laod()
+        #     self.n_1_gram_loaded_flags[n_1_gram_ind] = 1
+        if self.n != 2:
+            raise Exception('No implimentation')
+
+        log_nume = math.log10(self.ngram_dict.get(ngram, 0) + 1.0)
+        log_demo = math.log10(self.n_1_gram_dict[0].get(n_1_gram_key, 0) + self.vocab_num)
+        return log_nume - log_demo
+
+    def load_2gram_lazily(self, dic, ind):
+        file_name = '/raid_back/lrscp/data/ngram/original/vol1/data/2gms/2gm-000%d.gz' % ind
+        sys.stderr.write("Loading #%02d\n" % ind)
+
+        for line in gzip.open(file_name, 'r'):
+            line = line.rstrip()
+            lst = line.split('\t')
+            ngram = lst[0]
+            cnt = int(lst[1])
+            dic[ngram]=cnt
+
+        return dic
+
+    def lazy_get(self, dic, n, key):
+        if key in dic:
+            val = dic[key]
+        else:
+            #keyはどこ?
+            if n == 2:
+                ind = self.search_2gram_ind(key)
+                dic = self.load_2gram_lazily(dic, ind)
+            elif n == 3:
+                pass
+            elif n == 4:
+                pass
+
+        return ((dic, n), val)
