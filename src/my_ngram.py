@@ -82,7 +82,7 @@ def get_fourgram_dict():
     return (ans_dict, 4)
 
 
-#文字列のリストを受けとり、ngramにしたリストを返す
+#文字列のリストを受けとり、ngramにしたリストとnの値のタプルを返す
 #words: 文字列のリスト
 #start: 文頭を表す特殊な文字列
 #end: 文末を表す特殊な文字列
@@ -92,27 +92,23 @@ def get_ngram(words, n, start="<S>", end="</S>", delim=' '):
     lst.extend(words)
     lst.append(end)
 
-    return [delim.join(lst[i:i+n]) for i in xrange(0, len(lst) + 1 - n)]
+    return ([delim.join(lst[i:i+n]) for i in xrange(0, len(lst) + 1 - n)], n)
 
 #返す値は対数確率
 def calc_ngram_log_probability(ngram, ngram_dict, n_1_gram_dict, vocab_num, delim=' '):
-    # #n-gramの種類(nの値)が異なっていたらエラー
-    # if len(ngram.split(delim)) != len(ngram_dict.keys()[0].split(delim)):
-    #     raise Exception('Argument Error')
-
     n_1_gram = delim.join(ngram.split(delim)[0:-1])
     return math.log10(ngram_dict[0].get(ngram, 0) + 1.0) - math.log10(n_1_gram_dict[0].get(n_1_gram, 0) + vocab_num)
      
 #返す値は対数確率
 def calc_sentence_log_probability(sentence_ngram, ngram_dict, n_1_gram_dict, vocab_num, delim=' '):
     ans = 0.0
-    if len(sentence_ngram[0].split(delim)) != ngram_dict[1]:
+    if sentence_ngram[1] != ngram_dict[1]:
         raise Exception('Argument Error')
 
     if ngram_dict[1] - n_1_gram_dict[1] != 1:
         raise Exception('Argument Error')
 
-    for ngram in sentence_ngram:
+    for ngram in sentence_ngram[0]:
         ans += calc_ngram_log_probability(ngram, ngram_dict, n_1_gram_dict, vocab_num, delim)
 
     return ans
@@ -136,3 +132,46 @@ def get_stub_trigram_dict():
     trigram_dict = {}
     trigram_dict["<S> 走る </S>"] = 1
     return (trigram_dict, 3)
+
+def load_ngram_dicts(n):
+    sys.stderr.write("Loading unigram...")
+    sys.stderr.flush()
+    unigram_dict = get_unigram_dict()
+    sys.stderr.write("done.\n")
+    sys.stderr.flush()
+
+    if n == 2:
+        sys.stderr.write("Loading bigram...")
+        sys.stderr.flush()
+        ngram_dict = get_bigram_dict()
+        sys.stderr.write("done.\n")
+        sys.stderr.flush()
+        return (unigram_dict, unigram_dict, ngram_dict)
+
+    elif n == 3:
+        sys.stderr.write("Loading bigram...")
+        sys.stderr.flush()
+        n_1_gram_dict = get_bigram_dict()
+        sys.stderr.write("done.\n")
+        sys.stderr.flush()
+
+        sys.stderr.write("Loading trigram...")
+        sys.stderr.flush()
+        ngram_dict = get_trigram_dict()
+        sys.stderr.write("done.\n")
+        sys.stderr.flush()
+        return (unigram_dict, n_1_gram_dict, ngram_dict)
+
+    elif n == 4:
+        sys.stderr.write("Loading trigram...")
+        sys.stderr.flush()
+        n_1_gram_dict = get_trigram_dict()
+        sys.stderr.write("done.\n")
+        sys.stderr.flush()
+
+        sys.stderr.write("Loading fourgram...")
+        sys.stderr.flush()
+        ngram_dict = get_fourgram_dict()
+        sys.stderr.write("done.\n")
+        sys.stderr.flush()
+        return (unigram_dict, n_1_gram_dict, ngram_dict)
