@@ -181,16 +181,13 @@ class NgramManager:
             self.n_1_gram_dict = {}
             self.n_1_gram_loaded_flags = {}
 
-    def search_2gram_ind(self, key):
-        ind_lst = ["! </S>", "☆ 青のり", "たくさん 臨時", "も 追い返せ", "デバイス CD", "伯 朗", "引き続き 指摘", "発 叩き込も", "高かろ ー"]
-
+    def search_ngram_ind(self, key, ind_lst):
         #ind_lst[0] <= key < ind_lst[1] → ans_ind = 0
-        for i in xrange(1, 8+1): #FIXME マジックナンバー
-            if key < ind_lst[i]:
-                return i - 1
+        for i in xrange(0, len(ind_lst)-1):
+            if key < ind_lst[i+1]:
+                return i
 
-        return 8 #FIXME マジックナンバー
-
+        return len(ind_lst)-1
 
     #ngram_dictとn_1_gram_dictを利用して対数確率を計算
     def calc_sentence_log_probability(self, sentence_ngram, delim=' '):
@@ -205,9 +202,14 @@ class NgramManager:
     def calc_ngram_log_probability(self, ngram, delim=' '):
         n_1_gram_key = delim.join(ngram.split(delim)[0:-1])
 
-        ngram_ind = 0
+        ngram_ind = -1
         if self.n == 2:
-            ngram_ind = self.search_2gram_ind(ngram)
+            ind_lst = ["! </S>", "☆ 青のり", "たくさん 臨時", "も 追い返せ", "デバイス CD", "伯 朗", "引き続き 指摘", "発 叩き込も", "高かろ ー"]
+            ngram_ind = self.search_ngram_ind(ngram, ind_lst)
+        
+        elif self.n == 3:
+            ind_lst = ["!! ありがとう ござい", "2 ) はっぴ", "<S> そのまま 轢か", "<S> 日本 赤ちゃん", "TOP | 気", "、 そんな 憂鬱", "「 アール・デコ 様式", "いっ た 戦績", "が おこがましい です", "さ れ 歩道橋", "それなり に 着込ん", "つか 、 劇", "と かなり 早め", "ながら クリア で", "による 歌 .", "の 違法 整備", "ぴこぞう コーナー >", "もしかして 「 私", "を 教える 係り", "キチ の 誕生", "ストレート 用 コーム", "ハービス ENT で", "マジ あり ませ", "・ ・ 定峰", "交わる べき なり", "個別 的 です", "割合 ( 好み", "呼びかけ て 頂く", "天皇 が 参列", "左腕 が 復活", "情報 ( 料金", "新潟 の フィッシング", "村 に 生きる", "法 ; 港", "生前 に 読ん", "程 良く 煮え", "脇 元 嘉", "設け たり と", "過程 で 社内", "頸城 郡 松代"]
+            ngram_ind = self.search_ngram_ind(ngram, ind_lst)
         else:
             raise Exception('No implimentation')
 
@@ -215,26 +217,54 @@ class NgramManager:
         if ngram_ind in self.ngram_loaded_flags:
             pass
         else:
-            self.ngram_dict = self.load_2gram_lazily(self.ngram_dict, ngram_ind)
-            self.ngram_loaded_flags[ngram_ind] = 1
+            if self.n == 2:
+                self.ngram_dict = self.load_ngram_lazily(self.ngram_dict, ngram_ind, 2)
+                self.ngram_loaded_flags[ngram_ind] = 1
+            elif self.n == 3:
+                self.ngram_dict = self.load_ngram_lazily(self.ngram_dict, ngram_ind, 3)
+                self.ngram_loaded_flags[ngram_ind] = 1
+            else:
+                raise Exception('No implimentation')
 
-        # n_1_gram_ind = 0
-        # #既に読み込んだ(n-1)gramか?
-        # if ngram_ind in self.n_1_gram_loaded_flags:
-        #     pass
-        # else:
-        #     self.n_1_gram_dict = laod()
-        #     self.n_1_gram_loaded_flags[n_1_gram_ind] = 1
-        if self.n != 2:
+        n_1_gram_ind = -1
+        if self.n == 2:
+            pass
+
+        elif self.n == 3:
+            ind_lst = ["! </S>", "☆ 青のり", "たくさん 臨時", "も 追い返せ", "デバイス CD", "伯 朗", "引き続き 指摘", "発 叩き込も", "高かろ ー"]
+            n_1_gram_ind = self.search_ngram_ind(n_1_gram_key, ind_lst)
+        else:
             raise Exception('No implimentation')
 
+        #既に読み込んだ(n-1)gramか?
+        if n_1_gram_ind in self.n_1_gram_loaded_flags:
+            pass
+        else:
+            if self.n == 2:
+                pass #unigramは読み込み済み
+            elif self.n == 3:
+                self.n_1_gram_dict = self.load_ngram_lazily(self.n_1_gram_dict, n_1_gram_ind, 2)
+                self.n_1_gram_loaded_flags[n_1_gram_ind] = 1
+            else:
+                raise Exception('No implimentation')
+
         log_nume = math.log10(self.ngram_dict.get(ngram, 0) + 1.0)
-        log_demo = math.log10(self.n_1_gram_dict[0].get(n_1_gram_key, 0) + self.vocab_num)
+        log_demo = math.log10(self.n_1_gram_dict.get(n_1_gram_key, 0) + self.vocab_num)
         return log_nume - log_demo
 
-    def load_2gram_lazily(self, dic, ind):
-        file_name = '/raid_back/lrscp/data/ngram/original/vol1/data/2gms/2gm-000%d.gz' % ind
-        sys.stderr.write("Loading #%02d\n" % ind)
+    def load_ngram_lazily(self, dic, ind, n):
+        file_name = ''
+
+        if n == 2:
+            file_name = '/raid_back/lrscp/data/ngram/original/vol1/data/2gms/2gm-000%d.gz' % ind
+            sys.stderr.write("Loading bigram #%02d..." % ind)
+            sys.stderr.flush()
+        elif n == 3:
+            file_name = '/raid_back/lrscp/data/ngram/original/vol1/data/3gms/3gm-00%02d.gz' % ind
+            sys.stderr.write("Loading trigram #%02d..." % ind)
+            sys.stderr.flush()
+        else:
+            Exception('Not implimented')
 
         for line in gzip.open(file_name, 'r'):
             line = line.rstrip()
@@ -243,19 +273,7 @@ class NgramManager:
             cnt = int(lst[1])
             dic[ngram]=cnt
 
+        sys.stderr.write("done\n")
+        sys.stderr.flush()
+
         return dic
-
-    def lazy_get(self, dic, n, key):
-        if key in dic:
-            val = dic[key]
-        else:
-            #keyはどこ?
-            if n == 2:
-                ind = self.search_2gram_ind(key)
-                dic = self.load_2gram_lazily(dic, ind)
-            elif n == 3:
-                pass
-            elif n == 4:
-                pass
-
-        return ((dic, n), val)

@@ -3,8 +3,8 @@ import sys
 import my_ngram
 
 def main():
-    n = 2
-    ngram_manager = my_ngram.NgramManager(2)
+    n = 3
+    ngram_manager = my_ngram.NgramManager(n)
 
     for line in sys.stdin:
         line = line.rstrip()
@@ -18,10 +18,9 @@ def main():
         changed_log_prob = ngram_manager.calc_sentence_log_probability(changed_str_ngram)
         print "%s\t%f\t%s\t%f" % (orig_str, orig_log_prob, changed_str, changed_log_prob)
 
+    sys.stdout.flush()
     sys.stderr.write("Done. Releasing Memory...\n")
     sys.stderr.flush()
-
-
 
 if __name__ == '__main__':
     main()
