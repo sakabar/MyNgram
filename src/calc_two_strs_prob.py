@@ -7,7 +7,7 @@ def main():
     argvs = sys.argv #argvs[0]は実行しているプログラムの名前
     argc = len(argvs)
 
-    ngram_cache_file_name = str(n) + '-gram_prob.cache'
+    ngram_cache_file_name = 'cache/' + str(n) + '-gram_prob.cache'
 
     cached_prob_dic = {}
     #もしキャッシュファイルを指定していたら、読み込み

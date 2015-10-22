@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+set -eu
+
 if [ $# -ne 1 ]; then
   echo "Argument Error" >&2
   exit 1
