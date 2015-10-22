@@ -143,14 +143,20 @@ def load_ngram_dicts(n):
         return (unigram_dict, n_1_gram_dict, ngram_dict)
 
 class NgramManager:
-    def __init__(self, n):
+    def __init__(self, n, cached_prob_dic={}):
         self.n = n
-        sys.stderr.write("Loading unigram...")
-        sys.stderr.flush()
-        self.unigram_dict = get_unigram_dict()
+        self.unigram_dict = {}
+        if len(cached_prob_dic) == 0:
+            sys.stderr.write("Loading unigram...")
+            sys.stderr.flush()
+            self.unigram_dict = get_unigram_dict()
+            sys.stderr.write("done.\n")
+            sys.stderr.flush()
+        else:
+            # sys.stderr.write("Loading unigram was skipped.\n")
+            pass
+
         self.vocab_num = 2565424 #FIXME Google N-gram ベタ打ち
-        sys.stderr.write("done.\n")
-        sys.stderr.flush()
 
         self.ngram_dict = {}
         self.ngram_loaded_flags = {}
@@ -161,6 +167,11 @@ class NgramManager:
         else:
             self.n_1_gram_dict = {}
             self.n_1_gram_loaded_flags = {}
+
+        #ngramの確率値
+        if len(cached_prob_dic) > 0 and len(cached_prob_dic.keys()[0].split(' ')) != n:
+            raise Exception('')
+        self.prob_dic = cached_prob_dic
 
     def search_ngram_ind(self, key, ind_lst):
         #ind_lst[0] <= key < ind_lst[1] → ans_ind = 0
@@ -181,6 +192,10 @@ class NgramManager:
 
     #返す値は対数確率
     def calc_ngram_log_probability(self, ngram, delim=' '):
+        #既に計算した値であったら、そのまま返す
+        if ngram in self.prob_dic:
+            return self.prob_dic[ngram]
+
         n_1_gram_key = delim.join(ngram.split(delim)[0:-1])
 
         ngram_ind = -1
@@ -274,3 +289,4 @@ class NgramManager:
         sys.stderr.flush()
 
         return dic
+
