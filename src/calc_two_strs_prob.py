@@ -3,7 +3,7 @@ import sys
 import my_ngram
 
 def main():
-    n = 3
+    n = 4
     argvs = sys.argv #argvs[0]は実行しているプログラムの名前
     argc = len(argvs)
 
@@ -37,6 +37,7 @@ def main():
             changed_str_ngram = my_ngram.get_ngram(changed_str.split(' '), n)
             orig_log_prob = ngram_manager.calc_sentence_log_probability(orig_str_ngram)
             changed_log_prob = ngram_manager.calc_sentence_log_probability(changed_str_ngram)
+
             print "%s\t%f\t%s\t%f" % (orig_str, orig_log_prob, changed_str, changed_log_prob)
 
             #使ったn-gramを書き出しておく

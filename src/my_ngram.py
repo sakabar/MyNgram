@@ -290,3 +290,22 @@ class NgramManager:
 
         return dic
 
+
+    #引数で与えたngram確率のみを利用して確率を計算
+    #存在しない場合はスムージング
+    def calc_sentence_log_probability_only_cache(self, ngram_dic, sentence_ngram, delim=' '):
+        ans = 0.0
+        for ngram in sentence_ngram[0]:
+            ans += self.calc_ngram_log_probability_only_cache(ngram_dic, ngram, delim)
+
+        return ans
+
+
+    #返す値は対数確率
+    def calc_ngram_log_probability_only_cache(self, ngram_dic, ngram, delim=' '):
+        #既に計算した値であったら、そのまま返す
+        if ngram in ngram_dic:
+            return ngram_dic[ngram]
+        else: 
+            return math.log10(1) - math.log10(self.vocab_num)
+
