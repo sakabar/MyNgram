@@ -2,12 +2,13 @@
 
 set -eu
 
-n=3
-
-if [ $# -ne 1 ]; then
+if [ $# -ne 2 ]; then
   echo "Argument Error" >&2
   exit 1
 fi
+
+# n=4
+n=$2 #ngarmのnを第2引数で指定する
 
 cache_name=cache/$n'-gram_prob.cache.old'
 if [ -e $cache_name ]; then
